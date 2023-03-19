@@ -1,0 +1,245 @@
+
+ 
+-- In this projects I use some basic and advance SQL fuctions to Make Cleaning and  EDA s  
+
+
+
+
+
+---- Get know my my   Four Tables 
+             
+
+Select *  from [Bike_share].[dbo].[2019_Q1]
+
+
+
+Select *  from [Bike_share].[dbo].[2019_Q2]
+
+
+Select *  from [Bike_share].[dbo].[2019_Q3]
+
+
+Select *  from [Bike_share].[dbo].[2019_Q4]
+
+
+
+
+
+------- CLEANING DATA 
+
+ 
+
+  ALTER TABLE [Bike_share].[dbo].[2019_Q1]
+Add endDateConverted Date;
+
+
+update 
+[Bike_share].[dbo].[2019_Q1]
+set sdateConverted = convert(date,end_time)
+
+ ALTER TABLE [Bike_share].[dbo].[2019_Q2]
+Add endDateConverted1 Date;
+
+update 
+[Bike_share].[dbo].[2019_Q2]
+set enddateConverted1 = convert(date,end_time)
+
+
+ ALTER TABLE [Bike_share].[dbo].[2019_Q3]
+Add endDateConverted2 Date;
+
+update 
+[Bike_share].[dbo].[2019_Q3]
+set EnddateConverted2 = convert(date,end_time)
+
+ ALTER TABLE [Bike_share].[dbo].[2019_Q4]
+Add EndDateConverted3 Date;
+
+update 
+[Bike_share].[dbo].[2019_Q4]
+set enddateConverted3 = convert(date,end_time)
+
+
+
+ Select * from 
+  [Bike_share].[dbo].[2019_Q3] 
+  order by  tripduration desc 
+
+
+
+alter table [Bike_share].[dbo].[2019_Q4]  
+Drop column start_time, end_time 
+
+
+--- Tripduration Cleaning 
+
+
+select a.startDateConverted,a.endDateConverted, a.startDateConverted,b.endDateConverted, isnull(a.endDateConverted,a.startDateConverted )from 
+  [Bike_share].[dbo].[2019_Q1] A
+
+  join [Bike_share].[dbo].[2019_Q1] B 
+  on A.trip_id =B.trip_id
+  where a.endDateConverted is  null
+  
+  update a
+  set 
+  enddateconverted =isnull(a.endDateConverted,a.startDateConverted )from 
+  [Bike_share].[dbo].[2019_Q1] A
+  join [Bike_share].[dbo].[2019_Q1] B 
+  on A.trip_id =B.trip_id
+  where a.endDateConverted is  null
+
+  Select * from 
+  [Bike_share].[dbo].[2019_Q1] 
+
+
+
+ Select * from 
+  [Bike_share].[dbo].[2019_Q1] 
+
+
+
+  ;
+delete  from 
+  [Bike_share].[dbo].[2019_Q4] 
+  where  tripduration >1440
+  --order by  tripduration
+
+  
+delete  from 
+  [Bike_share].[dbo].[2019_Q1] 
+  where  tripduration >1440
+  --order by  tripduration
+
+
+
+
+
+
+
+
+
+
+
+  ----- COMBINING MY DATA TO A Full view Data 
+
+
+
+
+
+  select * Into Full_Year from  [Bike_share].[dbo].[2019_Q1]
+  where 1=0
+
+
+ drop table Full_year; 
+
+  select * Into Full_Year from 
+  [Bike_share].[dbo].[2019_Q1]
+  Union all 
+  Select * from 
+  [Bike_share].[dbo].[2019_Q2] 
+  
+  Union all  
+  Select * from 
+  [Bike_share].[dbo].[2019_Q3] 
+  
+  Union all
+  Select * from 
+  [Bike_share].[dbo].[2019_Q4];
+
+
+  select * from full_year 
+
+
+
+
+
+
+
+
+  ------- ANALYZING MY DATA 
+  
+
+  Select * from Full_year 
+    
+	
+
+  -------Number of Customers Vs Subscribers in 2019 
+
+    select distinct(usertype), count(*) as number_Users from Full_Year
+	group by usertype 
+	order by number_users desc
+
+
+
+	---- Percentage of Customers Vs Subscribers in 2019 
+	
+	select distinct(usertype), count(*) as number_Users from Full_Year
+	group by usertype 
+	order by number_users desc
+
+
+	
+
+
+
+	
+  ---- Number Of minutes Per User
+
+
+  select distinct(Usertype), sum(tripduration) Total_minutes  
+     from full_Year 
+    group by usertype 
+	order by Total_minutes  
+
+
+
+
+	-------Frequenccy Tripduration per Month as usertype 
+
+
+with cte_Months ( trip_id, tripduration,usertype, month_of_) as (
+ select trip_id, tripduration,usertype, 
+  Month(StartDateConverted) as Month_of_
+ from Full_Year )
+-- order by Month_of_)
+
+
+select  distinct(month_of_), usertype, count(tripduration) Trip_length_min
+from cte_months
+group by month_of_ ,usertype
+order by month_of_ ,Trip_length_min desc
+
+
+--------------- Frequenccy Tripduration per Weekday  as usertype 
+
+
+select  distinct(week_day), usertype, sum(tripduration) Trip_length_min
+from full_year 
+group by Week_day,usertype
+order by Week_day, Trip_length_min desc
+
+
+
+---- Genders with are Mostly used our servies 
+
+
+	select distinct(gender),usertype, count(tripduration) Trip_len_Min from Full_Year
+	group by gender,usertype
+	order by  Trip_len_Min desc
+
+--------- Birth year our subscribers
+
+
+select birthyear,usertype, sum(tripduration) Trip_len_Min from Full_Year
+ where usertype = 'subscriber'
+	group by gender,usertype, birthyear
+	order by  birthyear  desc
+
+
+	
+select * from Full_Year
+ --where usertype = 'customer' and birthyear is not null
+	--group by gender,usertype, birthyear
+	where  birthyear is not null and birthyear >'1940'
+	order by  birthyear
